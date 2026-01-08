@@ -15,5 +15,5 @@ public class Productos
     [Range(1, int.MaxValue, ErrorMessage = "El precio debe ser mayor a 0")]
     public decimal Precio { get; set; }
     [Required(ErrorMessage = "Las Existencias deben ser obligatorias")]
-    public int Existencias { get; set; }
+    public int Existencias { get; set; } = 0;
 }
