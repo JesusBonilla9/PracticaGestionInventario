@@ -12,7 +12,8 @@ public class Entradas
     [Required(ErrorMessage = "El concepto es obligatorio")]
     public string Concepto { get; set; }
     [Required(ErrorMessage = "El total es obligatorio")]
-    public int Total { get; set; }
+    [Range(0.01, double.MaxValue, ErrorMessage = "El costo debe ser mayor a 0")]
+    public double Total { get; set; }
 
     [ForeignKey(nameof(EntradaId))]
     public virtual ICollection<EntradasDetalles> EntradasDetalles { get; set; } = new List<EntradasDetalles>();
