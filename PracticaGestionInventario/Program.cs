@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using PracticaGestionInventario.Components;
 using PracticaGestionInventario.Components.Account;
 using PracticaGestionInventario.Data;
+using PracticaGestionInventario.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +15,8 @@ builder.Services.AddRazorComponents()
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+builder.Services.AddScoped<EntradasService>();
+builder.Services.AddScoped<ProductosService>();
 
 builder.Services.AddAuthentication(options =>
     {
