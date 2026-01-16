@@ -1,0 +1,212 @@
+﻿@page "/entradas/upsert/{EntradaId:int}"
+
+@using PracticaGestionInventario.Models
+@using PracticaGestionInventario.Services
+
+@inject EntradasService entradasService
+@inject NavigationManager navigationManager
+
+@rendermode InteractiveServer
+
+<PageTitle>@accion Entrada</PageTitle>
+
+<EditForm Model="Entrada" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+
+    <div class="container">
+        <div class="card shadow-lg">
+
+            <!-- HEADER -->
+            <div class="card-header text-center">
+                <h5 class="card-title">@accion Entrada</h5>
+            </div>
+
+            <!-- BODY -->
+            <div class="card-body">
+
+                <div class="row">
+                    <div class="col-3">
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Id</strong></label>
+                            <InputNumber class="form-control" readonly @bind-Value="Entrada.EntradaId" />
+                        </div>
+                    </div>
+
+                    <div class="col-4">
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Fecha</strong></label>
+                            <InputDate class="form-control" @bind-Value="Entrada.Fecha" />
+                            <ValidationMessage For="@(() => Entrada.Fecha)" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><strong>Concepto</strong></label>
+                    <InputText class="form-control" @bind-Value="Entrada.Concepto" />
+                    <ValidationMessage For="@(() => Entrada.Concepto)" />
+                </div>
+
+                <!-- DETALLES -->
+                <div class="border border-success p-3 mt-3">
+                    <h5>Detalles de la Entrada</h5>
+
+                    <div class="row">
+                        <div class="col-4">
+                            <label class="form-label">Producto</label>
+                            <InputSelect class="form-select" @bind-Value="Detalle.ProductoId">
+                                <option value="0" disabled>Seleccione un producto</option>
+                                @foreach (var producto in ListaProductos)
+                                {
+                                    <option value="@producto.ProductoId">
+                                        @producto.Descripcion - @producto.Existencias
+                                    </option>
+                                }
+                            </InputSelect>
+                        </div>
+
+                        <div class="col-3">
+                            <label class="form-label">Costo</label>
+                            <InputNumber class="form-control"readonly @bind-Value="Detalle.Costo" />
+                        </div>
+
+                        <div class="col-3">
+                            <label class="form-label">Cantidad</label>
+                            <div class="input-group">
+                                <InputNumber class="form-control" @bind-Value="Detalle.Cantidad" />
+                                <button type="button" class="btn btn-outline-success" @onclick="AgregarDetalle">
+                                    <span class="bi bi-plus"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <table class="table table-bordered mt-3">
+                        <thead class="table-light">
+                            <tr class="text-center">
+                                <th>Producto</th>
+                                <th>Cantidad</th>
+                                <th>Costo</th>
+                                <th>Importe</th>
+                                <th>Remover</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var d in Entrada.EntradasDetalles)
+                            {
+                                <tr class="text-center">
+                                    <td>
+                                        @ListaProductos.First(p => p.ProductoId == d.ProductoId).Descripcion
+                                    </td>
+                                    <td>@d.Cantidad</td>
+                                    <td>RD$@d.Costo</td>
+                                    <td>RD$@(d.Cantidad* d.Costo)</td>
+                                    <td>
+                                        <button type="button" class="btn btn-outline-danger"
+                                                @onclick="() => RemoverDetalle(d)">
+                                            <span class="bi bi-trash"></span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- TOTAL -->
+                <div class="row mt-3">
+                    <div class="col-3 offset-9">
+                        <label class="form-label"><strong>Total</strong></label>
+                        <label class="form-control text-end">
+                            <strong>RD$@Entrada.Total</strong>
+                        </label>
+                        <ValidationMessage For="@(() => Entrada.Total)" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- FOOTER -->
+            <div class="card-footer text-center">
+                <div class="btn-group">
+                    <a href="/Entradas/Index" class="btn btn-outline-secondary">
+                        <span class="bi bi-arrow-left"></span> Volver
+                    </a>
+
+                    <button type="submit" class="btn btn-outline-success">
+                        <span class="bi bi-check-circle"></span> Guardar
+                    </button>
+
+                    @if (accion == "Editar")
+                    {
+                        <button type="button" class="btn btn-outline-danger" @onclick="Eliminar">
+                            <span class="bi bi-trash"></span> Eliminar
+                        </button>
+                    }
+                </div>
+            </div>
+
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int EntradaId { get; set; }
+
+    public string accion { get; set; } = "Crear";
+    public Entradas Entrada { get; set; } = new();
+    public EntradasDetalles Detalle { get; set; } = new();
+    public List<Productos> ListaProductos { get; set; } = new();
+    public bool guardado;
+
+    protected override async Task OnInitializedAsync()
+    {
+        accion = EntradaId == 0 ? "Crear" : "Editar";
+
+        if (EntradaId > 0)
+        {
+            Entrada = await entradasService.Buscar(EntradaId);
+        }
+
+        ListaProductos = await entradasService.ListarProductos();
+    }
+
+    void AgregarDetalle()
+    {
+        if (Detalle.ProductoId < 1 || Detalle.Cantidad < 1)
+            return;
+
+        Detalle.Costo = ListaProductos
+            .First(p => p.ProductoId == Detalle.ProductoId).Costo;
+
+        Entrada.EntradasDetalles.Add(Detalle);
+
+        Entrada.Total = Entrada.EntradasDetalles
+            .Sum(d => d.Cantidad * d.Costo);
+
+        Detalle = new EntradasDetalles();
+    }
+
+    void RemoverDetalle(EntradasDetalles detalle)
+    {
+        Entrada.EntradasDetalles.Remove(detalle);
+        Entrada.Total = Entrada.EntradasDetalles
+            .Sum(d => d.Cantidad * d.Costo);
+        Detalle = detalle;
+    }
+
+    async Task Guardar()
+    {
+        guardado = await entradasService.Guardar(Entrada);
+        if (guardado)
+            navigationManager.NavigateTo("/Entradas/Index");
+    }
+
+    async Task Eliminar()
+    {
+        guardado = await entradasService.Eliminar(EntradaId);
+        if (guardado)
+            navigationManager.NavigateTo("/Entradas/Index");
+    }
+}
+
