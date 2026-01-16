@@ -1,0 +1,167 @@
+﻿@page "/productos/upsert/{ProductoId:int}"
+
+@inject ProductosService productosService
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
+
+<PageTitle>@accion Producto</PageTitle>
+
+<EditForm Model="Producto" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="container mt-4">
+        <div class="card shadow-lg">
+
+            @* ENCABEZADO *@
+            <div class="card-header text-center">
+                <h5 class="card-title mb-0">@accion Producto</h5>
+            </div>
+
+            @* CUERPO *@
+            <div class="card-body">
+
+                <div class="mb-3">
+                    <label class="form-label"><strong>Descripción</strong></label>
+                    <InputText class="form-control" @bind-Value="Producto.Descripcion" />
+                    <ValidationMessage For="@(() => Producto.Descripcion)" />
+                </div>
+
+                <div class="row">
+                    <div class="col-4">
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Costo</strong></label>
+                            <InputNumber class="form-control" @bind-Value="Producto.Costo" />
+                            <ValidationMessage For="@(() => Producto.Costo)" />
+                        </div>
+                    </div>
+
+                    <div class="col-4">
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Precio</strong></label>
+                            <InputNumber class="form-control" @bind-Value="Producto.Precio" />
+                            <ValidationMessage For="@(() => Producto.Precio)" />
+                        </div>
+                    </div>
+
+                    <div class="col-4">
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Existencias</strong></label>
+                            <InputNumber class="form-control" @bind-Value="Producto.Existencias"readonly/>
+                            <ValidationMessage For="@(() => Producto.Existencias)" />
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            @* PIE *@
+            <div class="card-footer text-center">
+                <div class="btn-group">
+                    <a href="/productos" class="btn btn-outline-secondary">
+                        <span class="bi bi-arrow-bar-left"></span> Volver
+                    </a>
+
+                    @if (!guardado)
+                    {
+                        <button type="submit" class="btn btn-outline-success">
+                            <span class="bi bi-check-circle"></span> Guardar
+                        </button>
+
+                        @if (accion == "Editar")
+                        {
+                            <button type="button" class="btn btn-outline-danger" @onclick="MostrarModalEliminar">
+                                <span class="bi bi-trash-fill"></span> Eliminar
+                            </button>
+                        }
+                    }
+                </div>
+            </div>
+
+        </div>
+    </div>
+</EditForm>
+
+@* MODAL DE CONFIRMACIÓN *@
+@if (MostrarModal)
+{
+    <div class="modal show fade" style="display:block;" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content shadow-lg">
+
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Confirmar Eliminación</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarModalEliminar"></button>
+                </div>
+
+                <div class="modal-body">
+                    <p>¿Seguro que deseas eliminar este producto?</p>
+                    <p><strong>ID:</strong> @Producto.ProductoId</p>
+                    <p><strong>Descripción:</strong> @Producto.Descripcion</p>
+                    <p><strong>Costo:</strong> RD$@Producto.Costo</p>
+                    <p><strong>Precio:</strong> RD$@Producto.Precio</p>
+                    <p><strong>Existencias:</strong> @Producto.Existencias</p>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-outline-secondary" @onclick="CerrarModalEliminar">
+                        <span class="bi bi-arrow-bar-left"></span> Cancelar
+                    </button>
+                    <button class="btn btn-outline-danger" @onclick="Eliminar">
+                        <span class="bi bi-trash-fill"></span> Eliminar
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int ProductoId { get; set; }
+
+    public string accion { get; set; } = "Crear";
+    public Productos Producto { get; set; } = new();
+    public bool MostrarModal { get; set; } = false;
+    public bool guardado { get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        accion = ProductoId == 0 ? "Crear" : "Editar";
+
+        if (ProductoId > 0)
+        {
+            var productoEncontrado = await productosService.Buscar(ProductoId);
+            if (productoEncontrado != null)
+                Producto = productoEncontrado;
+        }
+    }
+
+    private async Task Guardar()
+    {
+        guardado = await productosService.Guardar(Producto);
+        if (guardado)
+            navigationManager.NavigateTo("/Producto/Index");
+    }
+
+    private async Task Eliminar()
+    {
+        guardado = await productosService.Eliminar(ProductoId);
+        if (guardado)
+            navigationManager.NavigateTo("/Producto/Index");
+
+        CerrarModalEliminar();
+    }
+
+    private void MostrarModalEliminar()
+    {
+        MostrarModal = true;
+    }
+
+    private void CerrarModalEliminar()
+    {
+        MostrarModal = false;
+    }
+}
+

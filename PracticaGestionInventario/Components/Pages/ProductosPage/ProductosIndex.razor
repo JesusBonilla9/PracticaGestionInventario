@@ -1,0 +1,161 @@
+﻿@page "/Producto/Index"
+@using PracticaGestionInventario.Services
+@using PracticaGestionInventario.Models
+@inject ProductosService productosService
+@rendermode InteractiveServer
+
+<PageTitle>Index Productos</PageTitle>
+
+<div class="container">
+    <div class="card shadow-lg">
+
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Index de Productos</h5>
+
+            <a href="/productos/upsert/0" class="btn btn-primary">
+                <span class="bi bi-plus-square"></span> Crear
+            </a>
+        </div>
+
+
+        <div class="card-body">
+
+            <div class="row mt-3">
+                <div class="col-3">
+                    <label class="form-label"><strong>Filtrar Por</strong></label>
+                </div>
+                <div class="col-4">
+                    <label class="form-label"><strong>Búsqueda</strong></label>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-3">
+                    <InputSelect class="form-select" @bind-Value="Filtro">
+                        <option value="" selected disabled>Elija una opción</option>
+                        <option value="Id">Id</option>
+                        <option value="Descripcion">Descripción</option>
+                        <option value="Costo">Costo</option>
+                        <option value="Precio">Precio</option>
+                        <option value="Existencias">Existencias</option>
+                    </InputSelect>
+                </div>
+
+                <div class="col-4">
+                    <div class="input-group">
+                        <input class="form-control" @bind-value="ValorFiltro" placeholder="Buscar" />
+                        <button type="button" class="btn btn-primary bi bi-search" @onclick="Buscar"></button>
+                    </div>
+                </div>
+
+                <div class="col-3">
+                    <button type="button"
+                            class="btn btn-secondary bi bi-arrow-counterclockwise"
+                            @onclick="Restablecer">
+                    </button>
+                </div>
+            </div>
+
+            <table class="table table-hover mt-3">
+                <thead class="table table-striped text-black">
+                    <tr>
+                        <th>Id</th>
+                        <th>Descripción</th>
+                        <th>Costo</th>
+                        <th>Precio</th>
+                        <th>Existencias</th>
+                        <th>Editar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var producto in listaProductos)
+                    {
+                        <tr>
+                            <td>@producto.ProductoId</td>
+                            <td>@producto.Descripcion</td>
+                            <td>@producto.Costo</td>
+                            <td>@producto.Precio</td>
+                            <td>@producto.Existencias</td>
+                            <td>
+                                <a href="/productos/upsert/@producto.ProductoId"
+                                   class="btn btn-outline-primary bi bi-pencil"></a>
+
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+        </div>
+
+        <div class="card-footer d-flex justify-content-end">
+            <div class="d-flex flex-column text-end">
+                <label class="form-label">
+                    <strong>Cantidad de Registros:</strong> @listaProductos.Count
+                </label>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@code {
+
+    public List<Productos> listaProductos { get; set; } = new();
+
+    public string Filtro { get; set; } = string.Empty;
+    public string ValorFiltro { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        listaProductos = await productosService.Listar(p => true);
+    }
+
+    public async Task Buscar()
+    {
+        var listaFiltrada = await productosService.Listar(p => true);
+
+        if (!string.IsNullOrEmpty(Filtro))
+        {
+            if (Filtro == "Id" && int.TryParse(ValorFiltro, out int id))
+            {
+                listaFiltrada = listaFiltrada
+                    .Where(p => p.ProductoId == id)
+                    .ToList();
+            }
+            else if (Filtro == "Descripcion")
+            {
+                listaFiltrada = listaFiltrada
+                    .Where(p => p.Descripcion.Contains(ValorFiltro))
+                    .ToList();
+            }
+            else if (Filtro == "Costo" && double.TryParse(ValorFiltro, out double costo))
+            {
+                listaFiltrada = listaFiltrada
+                    .Where(p => p.Costo == costo)
+                    .ToList();
+            }
+            else if (Filtro == "Precio" && double.TryParse(ValorFiltro, out double precio))
+            {
+                listaFiltrada = listaFiltrada
+                    .Where(p => p.Precio == precio)
+                    .ToList();
+            }
+            else if (Filtro == "Existencias" && int.TryParse(ValorFiltro, out int existencias))
+            {
+                listaFiltrada = listaFiltrada
+                    .Where(p => p.Existencias == existencias)
+                    .ToList();
+            }
+        }
+
+        listaProductos = listaFiltrada;
+    }
+
+    public async Task Restablecer()
+    {
+        listaProductos = await productosService.Listar(p => true);
+        Filtro = string.Empty;
+        ValorFiltro = string.Empty;
+    }
+}
