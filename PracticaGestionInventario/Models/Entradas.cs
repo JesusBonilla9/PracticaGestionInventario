@@ -11,8 +11,6 @@ public class Entradas
     public DateTime Fecha {  get; set; } = DateTime.Now;
     [Required(ErrorMessage = "El concepto es obligatorio")]
     public string Concepto { get; set; }
-    [Required(ErrorMessage = "El total es obligatorio")]
-    [Range(0.01, double.MaxValue, ErrorMessage = "El costo debe ser mayor a 0")]
     public double Total { get; set; }
 
     [ForeignKey(nameof(EntradaId))]
