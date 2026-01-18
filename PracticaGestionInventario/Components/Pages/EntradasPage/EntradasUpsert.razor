@@ -1,10 +1,9 @@
 ﻿@page "/entradas/upsert/{EntradaId:int}"
 
-@using PracticaGestionInventario.Models
-@using PracticaGestionInventario.Services
-
 @inject EntradasService entradasService
+@inject ProductosService productosService
 @inject NavigationManager navigationManager
+@attribute [Authorize]
 
 @rendermode InteractiveServer
 
@@ -16,12 +15,10 @@
     <div class="container">
         <div class="card shadow-lg">
 
-            <!-- HEADER -->
             <div class="card-header text-center">
                 <h5 class="card-title">@accion Entrada</h5>
             </div>
 
-            <!-- BODY -->
             <div class="card-body">
 
                 <div class="row">
@@ -47,14 +44,14 @@
                     <ValidationMessage For="@(() => Entrada.Concepto)" />
                 </div>
 
-                <!-- DETALLES -->
                 <div class="border border-success p-3 mt-3">
                     <h5>Detalles de la Entrada</h5>
 
                     <div class="row">
                         <div class="col-4">
                             <label class="form-label">Producto</label>
-                            <InputSelect class="form-select" @bind-Value="Detalle.ProductoId">
+                            <InputSelect class="form-select" @bind-Value="Detalle.ProductoId" @bind-Value:after="OnProductoChanged">
+                                >
                                 <option value="0" disabled>Seleccione un producto</option>
                                 @foreach (var producto in ListaProductos)
                                 {
@@ -67,7 +64,7 @@
 
                         <div class="col-3">
                             <label class="form-label">Costo</label>
-                            <InputNumber class="form-control"readonly @bind-Value="Detalle.Costo" />
+                            <InputNumber class="form-control"@bind-Value="Detalle.Costo" readonly />
                         </div>
 
                         <div class="col-3">
@@ -112,23 +109,18 @@
                         </tbody>
                     </table>
                 </div>
-
-                <!-- TOTAL -->
                 <div class="row mt-3">
                     <div class="col-3 offset-9">
                         <label class="form-label"><strong>Total</strong></label>
                         <label class="form-control text-end">
                             <strong>RD$@Entrada.Total</strong>
                         </label>
-                        <ValidationMessage For="@(() => Entrada.Total)" />
                     </div>
                 </div>
             </div>
-
-            <!-- FOOTER -->
             <div class="card-footer text-center">
                 <div class="btn-group">
-                    <a href="/Entradas/Index" class="btn btn-outline-secondary">
+                    <a href="/Entrada/Index" class="btn btn-outline-secondary">
                         <span class="bi bi-arrow-left"></span> Volver
                     </a>
 
@@ -156,7 +148,7 @@
     public string accion { get; set; } = "Crear";
     public Entradas Entrada { get; set; } = new();
     public EntradasDetalles Detalle { get; set; } = new();
-    public List<Productos> ListaProductos { get; set; } = new();
+    public List<Productos> ListaProductos { get; set; } = new List<Productos>();
     public bool guardado;
 
     protected override async Task OnInitializedAsync()
@@ -167,46 +159,67 @@
         {
             Entrada = await entradasService.Buscar(EntradaId);
         }
+        else
+        {
+            Entrada.Fecha = DateTime.Now;
+        }
 
-        ListaProductos = await entradasService.ListarProductos();
+        ListaProductos = await productosService.Listar(p => true);
     }
+
+    void OnProductoChanged()
+    {
+        var producto = ListaProductos
+            .FirstOrDefault(p => p.ProductoId == Detalle.ProductoId);
+
+        if (producto != null)
+        {
+            Detalle.Costo = producto.Costo;
+        }
+        else
+        {
+            Detalle.Costo = 0;
+        }
+    }
+
 
     void AgregarDetalle()
     {
-        if (Detalle.ProductoId < 1 || Detalle.Cantidad < 1)
+        if (Detalle.ProductoId < 1 || Detalle.Cantidad < 1 || Detalle.Costo < 1)
             return;
 
         Detalle.Costo = ListaProductos
             .First(p => p.ProductoId == Detalle.ProductoId).Costo;
 
         Entrada.EntradasDetalles.Add(Detalle);
-
-        Entrada.Total = Entrada.EntradasDetalles
-            .Sum(d => d.Cantidad * d.Costo);
-
+        CalcularTotal();
         Detalle = new EntradasDetalles();
     }
 
     void RemoverDetalle(EntradasDetalles detalle)
     {
         Entrada.EntradasDetalles.Remove(detalle);
-        Entrada.Total = Entrada.EntradasDetalles
-            .Sum(d => d.Cantidad * d.Costo);
+        CalcularTotal();
         Detalle = detalle;
     }
+    void CalcularTotal()
+    {
+        Entrada.Total = Entrada.EntradasDetalles.Sum(d => d.Cantidad * d.Costo);
+    }
+
 
     async Task Guardar()
     {
         guardado = await entradasService.Guardar(Entrada);
         if (guardado)
-            navigationManager.NavigateTo("/Entradas/Index");
+            navigationManager.NavigateTo("/Entrada/Index");
     }
 
     async Task Eliminar()
     {
         guardado = await entradasService.Eliminar(EntradaId);
         if (guardado)
-            navigationManager.NavigateTo("/Entradas/Index");
+            navigationManager.NavigateTo("/Entrada/Index");
     }
 }
 

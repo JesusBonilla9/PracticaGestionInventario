@@ -1,8 +1,7 @@
 ﻿@page "/Producto/Index"
-@using PracticaGestionInventario.Services
-@using PracticaGestionInventario.Models
 @inject ProductosService productosService
 @rendermode InteractiveServer
+@attribute [Authorize]
 
 <PageTitle>Index Productos</PageTitle>
 

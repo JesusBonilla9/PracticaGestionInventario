@@ -1,171 +1,167 @@
 ﻿@page "/Entrada/Index"
-
 @inject EntradasService entradasService
 @rendermode InteractiveServer
+@attribute [Authorize]
 
 <PageTitle>Entradas</PageTitle>
 
-<div class="container">
-	<div class="card shadow-lg">
-		<div class="card-header text-center">
-			<h5 class="card-title">Entradas</h5>
-		</div>
+<div class="container mt-3">
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Entradas</h5>
 
-		<div class="card-body">
+            <a class="btn btn-primary bi bi-plus-lg"
+               href="/entradas/upsert/0">
+                Crear
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Desde</label>
+                    <InputDate class="form-control" @bind-Value="Desde" />
+                </div>
 
-			@* Labels fechas *@
-			<div class="row">
-				<div class="col-2">
-					<label class="col-form-label"><strong>Desde</strong></label>
-				</div>
-				<div class="col-3">
-					<label class="col-form-label"><strong>Hasta</strong></label>
-				</div>
-			</div>
+                <!-- HASTA -->
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Hasta</label>
+                    <InputDate class="form-control" @bind-Value="Hasta" />
+                </div>
 
-			@* Inputs fechas *@
-			<div class="row">
-				<div class="col-2">
-					<InputDate class="form-control" @bind-Value="FechaDesde" />
-				</div>
-				<div class="col-3">
-					<InputDate class="form-control w-75" @bind-Value="FechaHasta" />
-				</div>
-			</div>
+                <div class="col-md-6"></div>
 
-			@* Labels filtros *@
-			<div class="row mt-3">
-				<div class="col-3">
-					<label class="col-form-label"><strong>Filtrar por</strong></label>
-				</div>
-				<div class="col-4">
-					<label class="col-form-label"><strong>Buscar</strong></label>
-				</div>
-			</div>
+                <!-- FILTRAR POR -->
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Filtrar por</label>
+                    <InputSelect class="form-select" @bind-Value="Filtro">
+                        <option value="">Elige una opción</option>
+                        <option value="@nameof(Entradas.EntradaId)">Id</option>
+                        <option value="@nameof(Entradas.Concepto)">Concepto</option>
+                        <option value="@nameof(Entradas.Total)">Total</option>
+                    </InputSelect>
+                </div>
 
-			@* Inputs y botones *@
-			<div class="row align-items-center">
-				<div class="col-3">
-					<InputSelect class="form-select" @bind-Value="Filtro">
-						<option value="" disabled selected>Elige una opción</option>
-						<option value="Concepto">Concepto</option>
-						<option value="Total">Total</option>
-					</InputSelect>
-				</div>
+                <!-- BUSCAR -->
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Buscar</label>
+                    <div class="input-group">
+                        <input type="text"
+                               class="form-control"
+                               placeholder="Buscar"
+                               @bind="ValorFiltro" />
 
-				<div class="col-4">
-					<div class="input-group">
-						<input class="form-control" @bind="ValorFiltro" placeholder="Buscar" />
-						<button class="btn btn-outline-primary" @onclick="Buscar">
-							<span class="bi bi-search"></span>
-						</button>
-						<button class="btn btn-outline-secondary" @onclick="Restablecer">
-							<span class="bi bi-arrow-counterclockwise"></span>
-						</button>
-					</div>
-				</div>
+                        <button class="btn btn-outline-primary bi bi-search"
+                                @onclick="Buscar">
+                        </button>
 
-				<div class="col-5">
-					<a href="/entradas/upsert/0" class="btn btn-primary">
-						<span class="bi bi-plus-square"></span> Crear
-					</a>
-				</div>
-			</div>
+                        <button class="btn btn-outline-secondary bi bi-arrow-clockwise"
+                                @onclick="Restablecer">
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-			@* Tabla *@
-			<table class="table table-hover mt-4">
-				<thead class="table-striped">
-					<tr>
-						<th>Id</th>
-						<th>Fecha</th>
-						<th>Concepto</th>
-						<th>Total</th>
-						<th>Opciones</th>
-					</tr>
-				</thead>
-				<tbody>
-					@foreach (var entrada in ListaEntradas)
-					{
-						<tr>
-							<td>@entrada.EntradaId</td>
-							<td>@entrada.Fecha.ToString("dd/MM/yyyy")</td>
-							<td>@entrada.Concepto</td>
-							<td>@entrada.Total</td>
-							<td>
-								<a href="/entradas/upsert/@entrada.EntradaId"
-								   class="btn btn-outline-primary">
-									<span class="bi bi-pencil"></span>
-								</a>
-							</td>
-						</tr>
-					}
-				</tbody>
-			</table>
-		</div>
+            <!-- TABLA -->
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead class="border-bottom">
+                        <tr>
+                            <th>Id</th>
+                            <th>Fecha</th>
+                            <th>Concepto</th>
+                            <th class="text-end">Total</th>
+                            <th class="text-center">Opciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!ListaEntradas.Any())
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center">
+                                    No hay entradas
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var entrada in ListaEntradas)
+                            {
+                                <tr>
+                                    <td>@entrada.EntradaId</td>
+                                    <td>@entrada.Fecha.ToString("dd/MM/yyyy")</td>
+                                    <td>@entrada.Concepto</td>
+                                    <td class="text-end">@entrada.Total.ToString("N2")</td>
+                                    <td class="text-center">
+                                        <a class="btn btn-outline-primary btn-sm bi bi-pencil"
+                                           href="/entradas/upsert/@entrada.EntradaId">
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
 
-		@* Footer *@
-		<div class="card-footer text-end">
-			<strong>Total: </strong>
-			RD$ @Math.Round(ListaEntradas.Sum(e => e.Total), 2)
-		</div>
-	</div>
+            <!-- TOTAL -->
+            <div class="d-flex justify-content-end fw-bold mt-3">
+                Total: RD$ @ListaEntradas.Sum(e => e.Total).ToString("N2")
+            </div>
+        </div>
+    </div>
 </div>
 
 @code {
-	public List<Entradas> ListaEntradas { get; set; } = new();
+    public DateTime? Desde { get; set; }
+    public DateTime? Hasta { get; set; }
+    public string Filtro { get; set; } = string.Empty;
+    public string ValorFiltro { get; set; } = string.Empty;
 
-	public string Filtro { get; set; } = string.Empty;
-	public string ValorFiltro { get; set; } = string.Empty;
-	public DateTime? FechaDesde { get; set; }
-	public DateTime? FechaHasta { get; set; }
+    public List<Entradas> ListaEntradas { get; set; } = new();
 
-	protected override async Task OnInitializedAsync()
-	{
-		ListaEntradas = await entradasService.Listar(e => e.EntradaId > 0);
-	}
+    protected override async Task OnInitializedAsync()
+    {
+        await Buscar();
+    }
 
-	public async Task Buscar()
-	{
-		if (!string.IsNullOrWhiteSpace(ValorFiltro) || FechaDesde.HasValue || FechaHasta.HasValue)
-		{
-			if (Filtro == "Concepto")
-			{
-				ListaEntradas = await entradasService.Listar(
-					e => e.Concepto.ToLower().Contains(ValorFiltro.ToLower().Trim()));
-			}
-			else if (Filtro == "Total")
-			{
-				ListaEntradas = await entradasService.Listar(
-					e => e.Total.ToString().Contains(ValorFiltro.Trim()));
-			}
+    public async Task Buscar()
+    {
+        var lista = await entradasService.Listar(e => true);
 
-			if (FechaDesde.HasValue && FechaHasta.HasValue)
-				ListaEntradas = ListaEntradas
-					.Where(e => e.Fecha >= FechaDesde && e.Fecha <= FechaHasta)
-					.ToList();
-			else if (FechaDesde.HasValue)
-				ListaEntradas = ListaEntradas
-					.Where(e => e.Fecha >= FechaDesde)
-					.ToList();
-			else if (FechaHasta.HasValue)
-				ListaEntradas = ListaEntradas
-					.Where(e => e.Fecha <= FechaHasta)
-					.ToList();
-		}
-		else
-		{
-			ListaEntradas = await entradasService.Listar(e => e.EntradaId > 0);
-		}
-	}
+        if (Desde.HasValue && Hasta.HasValue)
+        {
+            lista = lista.Where(e =>
+                e.Fecha.Date >= Desde.Value.Date &&
+                e.Fecha.Date <= Hasta.Value.Date).ToList();
+        }
 
-	public async Task Restablecer()
-	{
-		ListaEntradas = await entradasService.Listar(e => e.EntradaId > 0);
-		Filtro = string.Empty;
-		ValorFiltro = string.Empty;
-		FechaDesde = null;
-		FechaHasta = null;
-	}
+        if (!string.IsNullOrWhiteSpace(ValorFiltro))
+        {
+            if (Filtro == nameof(Entradas.EntradaId)
+                && int.TryParse(ValorFiltro, out int id))
+                lista = lista.Where(e => e.EntradaId == id).ToList();
+
+            else if (Filtro == nameof(Entradas.Concepto))
+                lista = lista.Where(e =>
+                    e.Concepto.Contains(ValorFiltro,
+                        StringComparison.OrdinalIgnoreCase)).ToList();
+
+            else if (Filtro == nameof(Entradas.Total)
+                && double.TryParse(ValorFiltro, out double total))
+                lista = lista.Where(e => e.Total == total).ToList();
+        }
+
+        ListaEntradas = lista;
+    }
+
+    public async Task Restablecer()
+    {
+        Desde = null;
+        Hasta = null;
+        Filtro = string.Empty;
+        ValorFiltro = string.Empty;
+        await Buscar();
+    }
 }
 
 

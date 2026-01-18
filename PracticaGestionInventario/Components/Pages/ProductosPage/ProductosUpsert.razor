@@ -3,6 +3,7 @@
 @inject ProductosService productosService
 @inject NavigationManager navigationManager
 @rendermode InteractiveServer
+@attribute [Authorize]
 
 <PageTitle>@accion Producto</PageTitle>
 
@@ -13,12 +14,10 @@
     <div class="container mt-4">
         <div class="card shadow-lg">
 
-            @* ENCABEZADO *@
             <div class="card-header text-center">
                 <h5 class="card-title mb-0">@accion Producto</h5>
             </div>
 
-            @* CUERPO *@
             <div class="card-body">
 
                 <div class="mb-3">
@@ -55,10 +54,9 @@
 
             </div>
 
-            @* PIE *@
             <div class="card-footer text-center">
                 <div class="btn-group">
-                    <a href="/productos" class="btn btn-outline-secondary">
+                    <a href="/Producto/Index" class="btn btn-outline-secondary">
                         <span class="bi bi-arrow-bar-left"></span> Volver
                     </a>
 
@@ -82,7 +80,6 @@
     </div>
 </EditForm>
 
-@* MODAL DE CONFIRMACIÓN *@
 @if (MostrarModal)
 {
     <div class="modal show fade" style="display:block;" tabindex="-1">
