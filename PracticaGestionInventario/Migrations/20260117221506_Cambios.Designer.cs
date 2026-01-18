@@ -12,8 +12,8 @@ using PracticaGestionInventario.Data;
 namespace PracticaGestionInventario.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260108153550_inicial")]
-    partial class inicial
+    [Migration("20260117221506_Cambios")]
+    partial class Cambios
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -276,8 +276,8 @@ namespace PracticaGestionInventario.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<double>("Cantidad")
-                        .HasColumnType("float");
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("int");
 
                     b.Property<double>("Costo")
                         .HasColumnType("float");

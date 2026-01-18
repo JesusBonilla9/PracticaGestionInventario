@@ -214,7 +214,7 @@ namespace PracticaGestionInventario.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     EntradaId = table.Column<int>(type: "int", nullable: false),
                     ProductoId = table.Column<int>(type: "int", nullable: false),
-                    Cantidad = table.Column<double>(type: "float", nullable: false),
+                    Cantidad = table.Column<int>(type: "int", nullable: false),
                     Costo = table.Column<double>(type: "float", nullable: false)
                 },
                 constraints: table =>
